@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Regresión lineal simple (RLS)</title>
+    <meta charset="utf-8" />
+    <meta name="date" content="2026-04-09" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <link rel="stylesheet" href="xaringan_custom/xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+
+class: inverse, bottom, right
+
+
+
+
+
+
+
+
+&lt;!---
+About macros.js: permite escalar las imágenes como [:scale 50%](path to image), hay si que grabar ese archivo js en el directorio.
+.pull-left[&lt;images/Conocimiento cívico.png&gt;] 
+.pull-right[&lt;images/Conocimiento cívico_graf.png&gt;]
+
+---&gt;
+
+# _Octava Clase Social Data Science_
+## *Regresión lineal simple (RLS)*
+&lt;br&gt;
+&lt;hr&gt;
+### Docentes: Anais Herrera - Francisco Meneses
+### Ayudante: Ignacia Silva
+
+---
+
+## De la correlación a la regresión
+
+### ¿Qué ya sabemos?
+
+- La **correlación de Pearson (r)** nos permite:
+  - medir la **fuerza** de la relación  
+  - identificar la **dirección** (positiva/negativa)  
+  - evaluar si la relación es **lineal**
+
+--
+
+### ¿Qué nos falta?
+
+- La correlación **no permite**:
+  - predecir valores de \(Y\)  
+  - cuantificar el cambio en \(Y\) cuando cambia \(X\)  
+  - modelar explícitamente la relación  
+
+---
+
+### La **regresión lineal simple** es una **extensión de la correlación**
+
+- Pasamos de:
+  - “¿Qué tan relacionadas están X e Y?”
+- A:
+  - “¿Cómo cambia Y cuando cambia X?”
+  - “¿Podemos predecir Y a partir de X?”
+
+--
+
+### Idea clave
+
+$$
+\text{Correlación} \rightarrow \text{Asociación}
+$$
+
+$$
+\text{Regresión} \rightarrow \text{Asociación + Predicción}
+$$
+
+---
+
+## De describir a predecir
+
+Hasta ahora…
+
+- Hemos trabajado con **relaciones entre variables**
+- Sabemos identificar si dos variables están asociadas
+
+--
+
+Pero en ciencia de datos queremos ir más allá:
+
+&gt; No solo describir, **sino predecir**
+
+--
+
+### Ejemplo
+
+- Sabemos que **escolaridad** e **ingreso** están correlacionados  
+- Pero queremos responder: *¿Cuánto ingreso esperamos para una persona con 12 años de escolaridad?*
+
+--
+
+.center[
+👉 Necesitamos un modelo
+]
+
+---
+
+## Modelos de Machine Learning Supervisado
+
+### ¿Qué significa “supervisado”?
+
+- Tenemos una variable que queremos predecir → \(Y\)  
+- Usamos una o más variables explicativas → \(X\)
+
+???
+
+tenemos una variable objetivo… algo que queremos predecir.
+
+Y usamos otras variables para hacerlo.
+
+--
+
+### Objetivo
+
+👉 Aprender una función que permita predecir:
+
+$$
+Y = f(X)
+$$
+???
+
+En el fondo, estamos tratando de aprender una función que conecte X con Y.”
+
+--
+
+### Ejemplos
+
+- Predecir ingreso a partir de educación  
+- Predecir notas a partir de horas de estudio  
+- Predecir asistencia a partir de contexto escolar  
+
+---
+## Nuestro primer modelo: Regresión lineal simple
+## *La función lineal: Un modelamiento parsimonioso*
+
+.pull-left[
+Busca explicar la relación entre una variable dependiente `\((Y)\)` y una independiente `\((X)\)`:
+
+$$
+Y = \alpha + \beta X
+$$
+
+- `\((\alpha)\)`: intercepto (valor esperado de \(Y\) cuando \(X=0\))  
+
+- `\((\beta)\)`: pendiente o “beta” (cuánto cambia \(Y\) por cada unidad que aumenta \(X\))  
+
+
+]
+
+.pull-right[
+
+![](images/reg_image.png)
+
+]
+
+???
+
+Definir parsimonia!!
+característica deseada en todo modelo científico que plantea que el mejor modelo es aquel capaz de explicar mucho con poco
+
+un modelo parsimonioso es un modelo simple que explica bien
+
+regla metodológica en ciencia que prioriza la explicación más sencilla posible entre varias opciones, si todas explican los datos igualmente bien
+
+¿qué hace RLS?
+
+PPT 
+
+- Ajusta una **línea recta** a los datos  
+- Resume la relación entre \(X\) e \(Y\)  
+- Permite **predecir valores de \(Y\)**  
+
+---
+
+## Ejemplo intuitivo de relación perfectamente lineal
+
+Supongamos que alguien gana 1.000.000 de pesos y ahorra 200.000 al mes. En enero tenía ahorrados 2.000.000. ¿Cuánto tendrá ahorrado en Octubre (10 meses)? 
+
+
+.pull-left[
+- `\(Y\)` = Ahorro mensual  
+
+- `\(X\)` = Meses de ahorro
+]
+
+.pull-right[
+- `\((\alpha)\)`: intercepto (2.000.000)
+
+- `\((\beta)\)`: pendiente (200.000)
+
+]
+
+
+$$
+Y = \alpha + \beta X
+$$
+$$
+Y  = \alpha (2.000.000) + \beta(200.000)  * Xmeses (10)
+$$
+--
+
+&gt; En 10 meses el ahorro será de 4.000.000.
+
+--
+
+&gt; ¿cuánto será en 5, en 8 y en 15 meses? 
+
+
+---
+# Graficando la relación
+
+.pull-left[
+
+![](index_files/figure-html/unnamed-chunk-3-1.png)&lt;!-- --&gt;
+
+]
+
+.pull-right[
+
+El gráfico muestra la relación lineal. Mientras pasan los meses aumenta el ahorro.
+
+**Pendiente**: Por cada mes que pasa el ahorro aumenta en $200.000
+
+**Intercepto**: El ahorro parte de una base en los 0 meses, la cual es de $200.000.000
+
+]
+
+---
+
+class: inverse, middle, center, slideInRight
+
+# Mínimos Cuadrados Ordinarios
+
+
+---
+
+## Ajustando la recta a la complejidad de lo social
+
+Sabemos que la realidad no es *perfectamente lineal*. Aun así, podemos ajustar rectas a la relación entre dos variables para modelarla de manera parsimoniosa.
+
+El método de **mínimos cuadrados ordinarios (OLS)** busca encontrar la recta que **minimiza la suma de los errores al cuadrado**:
+
+$$
+\min \sum (Y_i - \hat{Y}_i)^2
+$$
+
+&gt; De este modo se genera la predicción lineal más adecuada
+
+.center[
+![](images/ScatterPlot-guide-04.jpg)
+]
+
+---
+## Modelo teórico de la Regresión Lineal Simple
+
+.left-column[
+$$
+Y = \beta_0 + \beta_1 X + \varepsilon
+$$
+
+`\(Y\)` var. dependiente
+
+`\(\beta_0\)` intercepto  
+
+`\(\beta_1\)` pendiente 
+
+`\(X\)` var. independiente
+
+`\(\varepsilon\)`: error *(parte de \(Y\) que el modelo no logra explicar) * 
+
+
+]
+
+.right-column[
+![](images/modelo_teorico_rl.png)
+]
+
+???
+aquí vemos la fórmula del modelo teórico de RLS
+
+anteriormente vimos el modelo estimado, ya que en realidad no estimamos el error
+
+Y Hasta ahora hemos visto la recta como si fuera perfecta… pero en la realidad, los datos no siguen exactamente una línea.
+
+Cada punto tiene una diferencia respecto a la recta.
+
+Esa diferencia es lo que llamamos error o residuo.
+
+Y justamente lo que hace la regresión es encontrar la recta que minimiza esos errores.
+
+Pero es importante que mantengamos presente que siempre habrá una parte que el modelo no es capaz de explicar
+
+preguntarles que es el intercepto
+
+que es pendiente
+
+la pendiente es el cambio esperado en \(Y\) por cada unidad que aumenta \(X\)
+
+---
+
+## ¿Cuándo podemos usar regresión?
+
+- Variable dependiente **continua**  
+
+- Variable independiente **continua o categórica**  
+
+- Relación **lineal** entre las variables.  
+
+
+Ejemplo:  
+
+- `\(Y\)` = ingreso (continuo)  
+
+- `\(X\)` = género (categórica: hombre/mujer) o edad.
+
+La lectura cambia según si es una variable categórica o continua
+
+---
+
+class: inverse, middle, center, slideInRight
+
+# Componentes de una regresión
+
+---
+
+### Interpretación de los parámetros principales
+
+.left-column[
+
+`\(\beta_1\)`: Aumento de `\(Y\)` por cada aumento de `\(X\)` 
+
+`\(\beta_0\)`: Valor de `\(Y\)` cuando `\(X\)` es 0
+
+`\(R^2\)`: prop. de la varianza explicada en el modelo  
+
+`\(\varepsilon\)`: parte no explicada por `\(X\)`
+]
+
+.right-column[
+
+&lt;table style="text-align:center"&gt;&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;em&gt;Dependent variable:&lt;/em&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td colspan="1" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;ingreso&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;esc&lt;/td&gt;&lt;td&gt;46,035.120&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(2,775.570)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Constant&lt;/td&gt;&lt;td&gt;5,572.227&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(33,047.700)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;Observations&lt;/td&gt;&lt;td&gt;1,026&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.212&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Adjusted R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.211&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/td&gt;&lt;td style="text-align:right"&gt;&lt;sup&gt;*&lt;/sup&gt;p&lt;0.1; &lt;sup&gt;**&lt;/sup&gt;p&lt;0.05; &lt;sup&gt;***&lt;/sup&gt;p&lt;0.01&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+]
+
+???
+
+“Por cada unidad adicional de escolaridad, el ingreso aumenta en promedio en aproximadamente 46 mil pesos.”
+
+---
+
+
+.pull-left[
+
+
+
+&lt;table style="text-align:center"&gt;&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;em&gt;Dependent variable:&lt;/em&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td colspan="1" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;ingreso&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;esc&lt;/td&gt;&lt;td&gt;46,035.120&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(2,775.570)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Constant&lt;/td&gt;&lt;td&gt;5,572.227&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(33,047.700)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;Observations&lt;/td&gt;&lt;td&gt;1,026&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.212&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Adjusted R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.211&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="2" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/td&gt;&lt;td style="text-align:right"&gt;&lt;sup&gt;*&lt;/sup&gt;p&lt;0.1; &lt;sup&gt;**&lt;/sup&gt;p&lt;0.05; &lt;sup&gt;***&lt;/sup&gt;p&lt;0.01&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+]
+
+.pull-right[
+
+
+![](index_files/figure-html/unnamed-chunk-6-1.png)&lt;!-- --&gt;
+
+]
+
+???
+
+“Por cada unidad adicional de escolaridad, el ingreso aumenta en promedio en aproximadamente 46 mil pesos.”
+
+El valor que aparece entre paréntesis corresponde al error estándar. En simple,
+“Este número nos dice qué tan precisa es nuestra estimación.” número pequeño → estimación precisa
+número grande → estimación más incierta
+
+p value: Significativo significa que es muy poco probable que este resultado se deba al azar. “Tenemos evidencia para creer que esta relación existe en la población.”
+
+El R2 es fundamental. En este caso muestra que “El modelo explica aproximadamente un 21% de la variación en el ingreso.”
+
+Diferencia con ajustado: “El R² ajustado corrige el R² considerando cuántas variables tiene el modelo.”
+
+“El R² siempre sube cuando agregas variables…
+el ajustado penaliza agregar variables innecesarias.”
+
+SINTESIS:
+Este modelo nos muestra que la escolaridad tiene un efecto positivo sobre el ingreso.
+
+Por cada año adicional de estudio, el ingreso aumenta en promedio en 46 mil pesos.
+
+Este resultado es estadísticamente significativo, lo que significa que es poco probable que se deba al azar.
+
+El modelo explica aproximadamente un 21% de la variación en el ingreso, lo cual es razonable en ciencias sociales.
+
+---
+
+## Idea del intercepto
+
+- Representa el valor esperado de `\(Y\)` cuando `\(X\)`=0.  
+
+- En algunos casos tiene sentido (ej: ingreso con 0 años de estudio).  
+
+- En otros, es solo un punto de referencia matemático.  
+
+
+---
+
+## Una variable dependiente, muchas independientes
+
+Podemos analizar una variable de interés (ej: **Ingreso**) usando varias **regresiones lineales simples** por separado:
+
+- Ingreso ~ Edad  
+- Ingreso ~ Escolaridad  
+- Ingreso ~ Género  
+
+
+Con esto podemos **comparar** cuál variable explica mejor el ingreso, aunque todavía no estamos considerando que pueden estar relacionadas entre sí.  
+
+
+
+---
+
+
+
+.small[
+
+
+&lt;table style="text-align:center"&gt;&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td colspan="4"&gt;&lt;em&gt;Dependent variable:&lt;/em&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td colspan="4" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td colspan="4"&gt;Ingreso autónomo&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(1)&lt;/td&gt;&lt;td&gt;(2)&lt;/td&gt;&lt;td&gt;(3)&lt;/td&gt;&lt;td&gt;(4)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;Edad&lt;/td&gt;&lt;td&gt;-2,354.247&lt;sup&gt;**&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(937.518)&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Escolaridad&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;46,035.120&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(2,775.570)&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Sexo&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;-89,945.420&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(25,806.360)&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Zona&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;-163,309.800&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(31,711.460)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Intercepto&lt;/td&gt;&lt;td&gt;634,678.500&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;5,572.227&lt;/td&gt;&lt;td&gt;641,760.100&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;714,152.700&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(46,313.960)&lt;/td&gt;&lt;td&gt;(33,047.700)&lt;/td&gt;&lt;td&gt;(36,310.110)&lt;/td&gt;&lt;td&gt;(39,118.880)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;Observations&lt;/td&gt;&lt;td&gt;1,035&lt;/td&gt;&lt;td&gt;1,026&lt;/td&gt;&lt;td&gt;1,035&lt;/td&gt;&lt;td&gt;1,035&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.006&lt;/td&gt;&lt;td&gt;0.212&lt;/td&gt;&lt;td&gt;0.012&lt;/td&gt;&lt;td&gt;0.025&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Adjusted R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.005&lt;/td&gt;&lt;td&gt;0.211&lt;/td&gt;&lt;td&gt;0.011&lt;/td&gt;&lt;td&gt;0.024&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/td&gt;&lt;td colspan="4" style="text-align:right"&gt;&lt;sup&gt;*&lt;/sup&gt;p&lt;0.1; &lt;sup&gt;**&lt;/sup&gt;p&lt;0.05; &lt;sup&gt;***&lt;/sup&gt;p&lt;0.01&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+]
+
+
+---
+
+### En síntesis como leer una regresión...
+
+`\(\beta_0\)`:  Intercepto, nos dice el valor de la dependiente cuando la independiente es 0
+
+`\(\beta_1\)`:  Es la pendiente 
+
+***¿Cómo se lee el resultado del beta de regresión?***
+- Variable X numérica: indica cuánto cambia, en promedio, la variable dependiente por cada unidad que aumenta la variable independiente.
+
+- Variables X categóricas: indica cuánto difiere, en promedio, la variable dependiente entre el grupo 1 y la categoría de referencia (grupo 0).
+
+---
+
+### En síntesis como leer una regresión...
+
+**p**: indica la significación (Resultado extrapolable a población).
+
+
+**R2**: proporción de la variación de Y que el modelo logra explicar. 
+
+*Párametros para interpretar la capacidad explicativa del modelo:*
+
+    - 0.01 Bajo
+    - 0.09 Medio
+    - 0.25 Alto 
+
+Para predecir: sustituir valores en la fórmula del modelo.  
+
+
+
+$$
+Y = \alpha + \beta X
+$$
+
+---
+
+## Utilidad de la regresión: dos grandes usos
+
+1. **Comprender relaciones** entre variables  
+   - Ejemplo: ¿cuánto influye la escolaridad en los ingresos?  
+
+2. **Predecir valores**  
+   - Ejemplo: estimar ingresos de una persona dada su edad y nivel educativo  
+
+---
+
+class: inverse, middle, center, slideInRight
+
+# Leamos resultados
+
+
+---
+
+
+
+&lt;table style="text-align:center"&gt;&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td colspan="4"&gt;&lt;em&gt;Dependent variable:&lt;/em&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td colspan="4" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td colspan="4"&gt;PROMEDIO_NOTAS&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(1)&lt;/td&gt;&lt;td&gt;(2)&lt;/td&gt;&lt;td&gt;(3)&lt;/td&gt;&lt;td&gt;(4)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;DEPENDENCIA&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;0.271&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;0.330&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(0.229)&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(0.226)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;COD_SEXO&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;1.751&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;1.804&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(0.499)&lt;/td&gt;&lt;td&gt;(0.500)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Constant&lt;/td&gt;&lt;td&gt;59.065&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;58.253&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;56.349&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;55.278&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(0.252)&lt;/td&gt;&lt;td&gt;(0.730)&lt;/td&gt;&lt;td&gt;(0.813)&lt;/td&gt;&lt;td&gt;(1.094)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;Observations&lt;/td&gt;&lt;td&gt;401&lt;/td&gt;&lt;td&gt;401&lt;/td&gt;&lt;td&gt;401&lt;/td&gt;&lt;td&gt;401&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.000&lt;/td&gt;&lt;td&gt;0.003&lt;/td&gt;&lt;td&gt;0.030&lt;/td&gt;&lt;td&gt;0.035&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Adjusted R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.000&lt;/td&gt;&lt;td&gt;0.001&lt;/td&gt;&lt;td&gt;0.028&lt;/td&gt;&lt;td&gt;0.030&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="5" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/td&gt;&lt;td colspan="4" style="text-align:right"&gt;&lt;sup&gt;*&lt;/sup&gt;p&lt;0.1; &lt;sup&gt;**&lt;/sup&gt;p&lt;0.05; &lt;sup&gt;***&lt;/sup&gt;p&lt;0.01&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+
+---
+
+.small[
+
+
+&lt;table style="text-align:center"&gt;&lt;caption&gt;&lt;strong&gt;Modelo: predecir talla de calzado 👟&lt;/strong&gt;&lt;/caption&gt;
+&lt;tr&gt;&lt;td colspan="4" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td colspan="3"&gt;&lt;em&gt;Dependent variable:&lt;/em&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td&gt;&lt;/td&gt;&lt;td colspan="3" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td colspan="3"&gt;shoesize_europe&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(1)&lt;/td&gt;&lt;td&gt;(2)&lt;/td&gt;&lt;td&gt;(3)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="4" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;is_female&lt;/td&gt;&lt;td&gt;-1.225&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(1.067)&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;weight_kg&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;0.109&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(0.033)&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;height_cm&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;0.237&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;(0.050)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Constant&lt;/td&gt;&lt;td&gt;42.340&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;33.602&lt;sup&gt;***&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;-0.179&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;(0.624)&lt;/td&gt;&lt;td&gt;(2.575)&lt;/td&gt;&lt;td&gt;(8.946)&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="4" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;Observations&lt;/td&gt;&lt;td&gt;38&lt;/td&gt;&lt;td&gt;37&lt;/td&gt;&lt;td&gt;36&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.035&lt;/td&gt;&lt;td&gt;0.232&lt;/td&gt;&lt;td&gt;0.394&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td style="text-align:left"&gt;Adjusted R&lt;sup&gt;2&lt;/sup&gt;&lt;/td&gt;&lt;td&gt;0.009&lt;/td&gt;&lt;td&gt;0.210&lt;/td&gt;&lt;td&gt;0.376&lt;/td&gt;&lt;/tr&gt;
+&lt;tr&gt;&lt;td colspan="4" style="border-bottom: 1px solid black"&gt;&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td style="text-align:left"&gt;&lt;em&gt;Note:&lt;/em&gt;&lt;/td&gt;&lt;td colspan="3" style="text-align:right"&gt;&lt;sup&gt;*&lt;/sup&gt;p&lt;0.1; &lt;sup&gt;**&lt;/sup&gt;p&lt;0.05; &lt;sup&gt;***&lt;/sup&gt;p&lt;0.01&lt;/td&gt;&lt;/tr&gt;
+&lt;/table&gt;
+
+]
+
+---
+
+## Actividad 1
+
+Dado el modelo:
+
+$$
+Ingreso = 300 + 200 \cdot \text{Escolaridad}
+$$
+
+- ¿Cuál es el ingreso esperado para una persona con 10 años de escolaridad?  
+- ¿Y para una persona con 15 años?  
+
+
+---
+
+## Actividad 2 (Discusión)
+
+- ¿Qué riesgos existen al usar la regresión solo como herramienta de predicción sin pensar en causalidad?  
+
+---
+
+## Ticket de salida
+.center[
+
+&lt;img src="images/qr_ticket7.png"  width="70%"&gt;
+
+
+]
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script src="xaringan_custom/macros.js"></script>
+<script>var slideshow = remark.create({
+  "highlightStyle": "github",
+  "highlightLines": true,
+  "countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+// add `data-at-shortcutkeys` attribute to <body> to resolve conflicts with JAWS
+// screen reader (see PR #262)
+(function(d) {
+  let res = {};
+  d.querySelectorAll('.remark-help-content table tr').forEach(tr => {
+    const t = tr.querySelector('td:nth-child(2)').innerText;
+    tr.querySelectorAll('td:first-child .key').forEach(key => {
+      const k = key.innerText;
+      if (/^[a-z]$/.test(k)) res[k] = t;  // must be a single letter (key)
+    });
+  });
+  d.body.setAttribute('data-at-shortcutkeys', JSON.stringify(res));
+})(document);
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
